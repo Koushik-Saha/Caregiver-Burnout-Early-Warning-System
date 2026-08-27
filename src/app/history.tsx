@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, Pressable, StatusBar, Dimensions, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LineChart } from 'react-native-chart-kit';
 import { COLORS, SPACING, FONT_SIZES } from '@/constants/theme';
@@ -21,26 +21,13 @@ function getYCoord(score: number): number {
   return GRAPH_BOTTOM - (score / 100) * GRAPH_HEIGHT;
 }
 
-// MOCK DATA for testing and preview
-const MOCK_SCORES = [55, 60, 58, 64, 68, 72, 70, 75];
-const MOCK_LABELS = ['Wk1', 'Wk2', 'Wk3', 'Wk4', 'Wk5', 'Wk6', 'Wk7', 'Wk8'];
-const MOCK_HISTORY: CheckinData[] = MOCK_SCORES.map((score, index) => {
-  const date = new Date();
-  date.setDate(date.getDate() - (7 * (MOCK_SCORES.length - 1 - index)));
-  const dateString = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  return {
-    date: dateString,
-    q1: Math.round(score * 0.1),
-    q2: Math.round(score * 0.1),
-    totalScore: score,
-  };
-});
-
 export default function HistoryScreen() {
   const router = useRouter();
   const [history, setHistory] = useState<CheckinData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showMock, setShowMock] = useState(false);
+  
+  // Controls the display of the preview sample chart
+  const [showSample, setShowSample] = useState(false);
   const [selectedPoint, setSelectedPoint] = useState<{ value: number; x: number; y: number } | null>(null);
 
   useEffect(() => {
@@ -72,28 +59,110 @@ export default function HistoryScreen() {
     router.back();
   };
 
-  // Determine which data source to use
-  const activeHistory = showMock ? MOCK_HISTORY : history;
-  const hasEnoughData = activeHistory.length >= 2;
+  const hasEnoughData = history.length >= 2;
 
-  // Extract scores and labels for the chart
-  const lastEight = activeHistory.slice(-8);
+  // Extract scores and labels for the real chart
+  const lastEight = history.slice(-8);
   const chartScores = lastEight.map((h) => h.totalScore);
-  
-  // Create X axis labels: e.g. dates or Wk1, Wk2...
-  const chartLabels = lastEight.map((h, i) => {
-    if (showMock) return MOCK_LABELS[i];
-    // Show short date like "Aug 26"
-    return h.date.split(',')[0];
-  });
+  const chartLabels = lastEight.map((h) => h.date.split(',')[0]);
 
   // Calculate current risk band and color from the latest score
   const latestScore = chartScores[chartScores.length - 1] ?? 50;
   const currentDetails = computeCareLoad({ phq2Score: 0, careHours: 0 }, latestScore);
   const currentLineColor = currentDetails.bandColor;
 
+  /**
+   * Helper function to render the line chart with reference lines and custom styles.
+   */
+  const renderChart = (scores: number[], labels: string[], lineColor: string) => {
+    return (
+      <View style={styles.chartContainer}>
+        {/* Reference Lines - Absolute Overlays */}
+        <View style={styles.refLineContainer} pointerEvents="none">
+          {/* High Reference Line (y = 80) */}
+          <View style={[styles.refLine, { top: getYCoord(80), borderColor: COLORS.coral }]}>
+            <Text style={[styles.refLabel, { color: COLORS.coral }]}>High</Text>
+          </View>
+          
+          {/* Elevated Reference Line (y = 65) */}
+          <View style={[styles.refLine, { top: getYCoord(65), borderColor: COLORS.amber }]}>
+            <Text style={[styles.refLabel, { color: COLORS.amber }]}>Elevated</Text>
+          </View>
+          
+          {/* Moderate Reference Line (y = 45) */}
+          <View style={[styles.refLine, { top: getYCoord(45), borderColor: COLORS.teal }]}>
+            <Text style={[styles.refLabel, { color: COLORS.teal }]}>Moderate</Text>
+          </View>
+        </View>
+
+        <LineChart
+          data={{
+            labels: labels,
+            datasets: [{ data: scores }],
+          }}
+          width={CHART_WIDTH}
+          height={CHART_HEIGHT}
+          fromZero={true}
+          withInnerLines={false}
+          withOuterLines={false}
+          withHorizontalLabels={true}
+          withVerticalLabels={true}
+          chartConfig={{
+            backgroundColor: COLORS.bg,
+            backgroundGradientFrom: COLORS.bg,
+            backgroundGradientTo: COLORS.bg,
+            decimalPlaces: 0,
+            color: (opacity = 1) => lineColor,
+            labelColor: (opacity = 1) => COLORS.textSec,
+            propsForBackgroundLines: {
+              strokeWidth: 0, // Hides standard grid lines
+            },
+            propsForDots: {
+              r: '8', // Larger touch target
+              strokeWidth: '2',
+              stroke: COLORS.bg,
+            },
+            propsForLabels: {
+              fontSize: 15, // Minimum accessibility font size
+            },
+          }}
+          onDataPointClick={(data) => {
+            setSelectedPoint({
+              value: data.value,
+              x: data.x,
+              y: data.y,
+            });
+          }}
+          bezier
+          style={styles.chart}
+        />
+
+        {/* Tooltip Overlay */}
+        {selectedPoint && (
+          <Pressable 
+            style={StyleSheet.absoluteFill} 
+            onPress={() => setSelectedPoint(null)}
+          >
+            <View 
+              style={[
+                styles.tooltip, 
+                { 
+                  top: selectedPoint.y - 35, 
+                  left: selectedPoint.x - 22 
+                }
+              ]}
+            >
+              <Text style={styles.tooltipText}>{selectedPoint.value}</Text>
+            </View>
+          </Pressable>
+        )}
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
+      <Stack.Screen options={{ headerShown: false }} />
       <StatusBar barStyle="light-content" backgroundColor={COLORS.bg} />
 
       {/* Header Row */}
@@ -117,109 +186,40 @@ export default function HistoryScreen() {
         </View>
       ) : !hasEnoughData ? (
         /* Empty State */
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyTitle}>Your score history will appear here</Text>
-          <Text style={styles.emptySubtitle}>
-            Come back after your first two check-ins to see your trend
-          </Text>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          {/* Sample Chart rendered ABOVE empty state details if toggled */}
+          {showSample && (
+            <View style={styles.chartSection}>
+              <Text style={styles.sectionTitle}>Sample Trend</Text>
+              {renderChart([42, 48, 51, 55, 59, 64, 61, 60], ['Wk1','Wk2','Wk3','Wk4','Wk5','Wk6','Wk7','Wk8'], '#2DD4BF')}
+            </View>
+          )}
 
-          <Pressable
-            onPress={() => setShowMock(true)}
-            style={styles.demoButton}
-            accessibilityRole="button"
-            accessibilityLabel="Show sample chart and check-in trend for preview"
-          >
-            <Text style={styles.demoButtonText}>View sample chart</Text>
-          </Pressable>
-        </View>
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyTitle}>Your score history will appear here</Text>
+            <Text style={styles.emptySubtitle}>
+              Come back after your first two check-ins to see your trend
+            </Text>
+
+            {!showSample && (
+              <Pressable
+                onPress={() => setShowSample(true)}
+                style={styles.demoButton}
+                accessibilityRole="button"
+                accessibilityLabel="Show sample chart and check-in trend for preview"
+              >
+                <Text style={styles.demoButtonText}>View sample chart</Text>
+              </Pressable>
+            )}
+          </View>
+        </ScrollView>
       ) : (
         /* Chart & Historical Cards list */
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {/* Section: Chart */}
           <View style={styles.chartSection}>
             <Text style={styles.sectionTitle}>Trend over time</Text>
-            
-            <View style={styles.chartContainer}>
-              {/* Reference Lines - Absolute Overlays */}
-              <View style={styles.refLineContainer} pointerEvents="none">
-                {/* High Reference Line (y = 80) */}
-                <View style={[styles.refLine, { top: getYCoord(80), borderColor: COLORS.coral }]}>
-                  <Text style={[styles.refLabel, { color: COLORS.coral }]}>High</Text>
-                </View>
-                
-                {/* Elevated Reference Line (y = 65) */}
-                <View style={[styles.refLine, { top: getYCoord(65), borderColor: COLORS.amber }]}>
-                  <Text style={[styles.refLabel, { color: COLORS.amber }]}>Elevated</Text>
-                </View>
-                
-                {/* Moderate Reference Line (y = 45) */}
-                <View style={[styles.refLine, { top: getYCoord(45), borderColor: COLORS.teal }]}>
-                  <Text style={[styles.refLabel, { color: COLORS.teal }]}>Moderate</Text>
-                </View>
-              </View>
-
-              <LineChart
-                data={{
-                  labels: chartLabels,
-                  datasets: [{ data: chartScores }],
-                }}
-                width={CHART_WIDTH}
-                height={CHART_HEIGHT}
-                fromZero={true}
-                withInnerLines={false}
-                withOuterLines={false}
-                withHorizontalLabels={true}
-                withVerticalLabels={true}
-                chartConfig={{
-                  backgroundColor: COLORS.bg,
-                  backgroundGradientFrom: COLORS.bg,
-                  backgroundGradientTo: COLORS.bg,
-                  decimalPlaces: 0,
-                  color: (opacity = 1) => currentLineColor,
-                  labelColor: (opacity = 1) => COLORS.textSec,
-                  propsForBackgroundLines: {
-                    strokeWidth: 0, // Hides standard grid lines
-                  },
-                  propsForDots: {
-                    r: '8', // Larger touch target
-                    strokeWidth: '2',
-                    stroke: COLORS.bg,
-                  },
-                  propsForLabels: {
-                    fontSize: 15, // Minimum accessibility font size
-                  },
-                }}
-                onDataPointClick={(data) => {
-                  setSelectedPoint({
-                    value: data.value,
-                    x: data.x,
-                    y: data.y,
-                  });
-                }}
-                bezier
-                style={styles.chart}
-              />
-
-              {/* Tooltip Overlay */}
-              {selectedPoint && (
-                <Pressable 
-                  style={StyleSheet.absoluteFill} 
-                  onPress={() => setSelectedPoint(null)}
-                >
-                  <View 
-                    style={[
-                      styles.tooltip, 
-                      { 
-                        top: selectedPoint.y - 35, 
-                        left: selectedPoint.x - 22 
-                      }
-                    ]}
-                  >
-                    <Text style={styles.tooltipText}>{selectedPoint.value}</Text>
-                  </View>
-                </Pressable>
-              )}
-            </View>
+            {renderChart(chartScores, chartLabels, currentLineColor)}
           </View>
 
           {/* Section: Historical check-in cards */}
@@ -227,7 +227,7 @@ export default function HistoryScreen() {
             <Text style={styles.sectionTitle}>Past check-ins</Text>
             
             {/* Last 4 entries, newest first */}
-            {activeHistory.slice().reverse().slice(0, 4).map((entry, index) => {
+            {history.slice().reverse().slice(0, 4).map((entry, index) => {
               const details = computeCareLoad({ phq2Score: 0, careHours: 0 }, entry.totalScore);
               return (
                 <View key={index} style={styles.historyCard}>
@@ -258,27 +258,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.bg,
     paddingHorizontal: SPACING.lg,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: SPACING.md,
-    marginBottom: SPACING.md,
-  },
-  backButton: {
-    width: 48,
-    height: 48,
-    justifyContent: 'center',
-    alignItems: 'flex-start',
-  },
-  headerTitle: {
-    fontSize: FONT_SIZES.lg, // 18px
-    fontWeight: 'bold',
-    color: COLORS.textPri,
-  },
-  placeholder: {
-    width: 48,
-  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -289,13 +268,13 @@ const styles = StyleSheet.create({
     color: COLORS.textSec,
   },
   scrollContent: {
+    paddingTop: 48, // Moved all content to paddingTop: 48, not centered
     paddingBottom: SPACING.xxl,
   },
   emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: SPACING.xl,
+    paddingTop: 24, // Flows naturally from the top of ScrollView
   },
   emptyTitle: {
     fontSize: FONT_SIZES.lg, // 18px
@@ -433,5 +412,26 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.md, // 15px
     fontWeight: 'bold',
     color: COLORS.bg,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: SPACING.md,
+    marginBottom: SPACING.md,
+  },
+  backButton: {
+    width: 48,
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+  },
+  headerTitle: {
+    fontSize: FONT_SIZES.lg, // 18px
+    fontWeight: 'bold',
+    color: COLORS.textPri,
+  },
+  placeholder: {
+    width: 48,
   },
 });
