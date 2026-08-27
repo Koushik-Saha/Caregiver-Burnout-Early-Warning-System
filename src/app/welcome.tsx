@@ -1,8 +1,9 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View, Pressable, StatusBar, ScrollView, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, Stack } from 'expo-router';
 import { COLORS, SPACING, FONT_SIZES } from '@/constants/theme';
+import { trackEvent } from '@/lib/analytics';
 
 export default function WelcomeScreen() {
   const router = useRouter();
@@ -19,7 +20,12 @@ export default function WelcomeScreen() {
   
   const buttonFade = useRef(new Animated.Value(0)).current;
 
+  const [logoTaps, setLogoTaps] = useState(0);
+
   useEffect(() => {
+    // Log app opened locally
+    trackEvent('app_opened');
+
     // Run animations in parallel with their specified delays
     Animated.parallel([
       Animated.timing(logoFade, {
@@ -103,11 +109,25 @@ export default function WelcomeScreen() {
       >
         {/* Top Section: Logo Mark, App Name & Header */}
         <View style={styles.logoAndHeaderContainer}>
-          {/* Logo Mark: Fade in */}
+          {/* Logo Mark: Fade in with secret taps to open debug screen */}
           <Animated.View style={{ opacity: logoFade }}>
-            <View style={styles.logoMark}>
-              <Text style={styles.logoEmoji}>🌿</Text>
-            </View>
+            <Pressable 
+              onPress={() => {
+                const nextTaps = logoTaps + 1;
+                if (nextTaps >= 5) {
+                  setLogoTaps(0);
+                  router.push('/debug');
+                } else {
+                  setLogoTaps(nextTaps);
+                }
+              }}
+              accessibilityElementsHidden={true}
+              importantForAccessibility="no"
+            >
+              <View style={styles.logoMark}>
+                <Text style={styles.logoEmoji}>🌿</Text>
+              </View>
+            </Pressable>
           </Animated.View>
           
           {/* App Label: Fade in */}

@@ -7,6 +7,7 @@ import { LineChart } from 'react-native-chart-kit';
 import { COLORS, SPACING, FONT_SIZES } from '@/constants/theme';
 import { getCheckinHistory, CheckinData } from '@/lib/checkin';
 import { computeCareLoad } from '@/lib/score';
+import { trackEvent } from '@/lib/analytics';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const CHART_WIDTH = SCREEN_WIDTH - (SPACING.lg * 2);
@@ -202,7 +203,13 @@ export default function HistoryScreen() {
             </Text>
 
             <Pressable
-              onPress={() => setShowSample(!showSample)}
+              onPress={() => {
+                const nextVal = !showSample;
+                setShowSample(nextVal);
+                if (nextVal) {
+                  trackEvent('sample_chart_viewed');
+                }
+              }}
               style={styles.demoButton}
               accessibilityRole="button"
               accessibilityLabel={showSample ? "Hide sample chart preview" : "Show sample chart and check-in trend for preview"}

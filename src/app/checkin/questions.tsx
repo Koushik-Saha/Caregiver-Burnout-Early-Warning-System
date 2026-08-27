@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, Pressable, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -6,6 +6,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING, FONT_SIZES } from '@/constants/theme';
 import { useCareStore } from '@/lib/store';
 import { saveCheckin } from '@/lib/checkin';
+import { computeCareLoad } from '@/lib/score';
+import { trackEvent } from '@/lib/analytics';
 
 const OPTIONS = [
   { value: 0, label: 'Not at all' },
@@ -22,6 +24,11 @@ export default function CheckinQuestionsScreen() {
   const [q1Score, setQ1Score] = useState<number | null>(null);
   const [selectedVal, setSelectedVal] = useState<number | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
+
+  useEffect(() => {
+    // Log checkin started locally
+    trackEvent('checkin_started');
+  }, []);
 
   const questions = [
     'Over the past 2 weeks, how often have you felt little interest or pleasure in doing things?',
@@ -52,6 +59,21 @@ export default function CheckinQuestionsScreen() {
           
           // Update Zustand store
           setWeeklyScore(total);
+          
+          // Calculate score details for analytics props
+          const storeState = useCareStore.getState();
+          const careHrs = storeState.hoursPerWeek !== null ? storeState.hoursPerWeek : 50;
+          const result = computeCareLoad({
+            phq2Score: total,
+            careHours: careHrs,
+          });
+
+          // Log checkin completed locally
+          await trackEvent('checkin_completed', {
+            phq2Score: total,
+            band: result.band,
+            score: result.score,
+          });
           
           // Navigate to score screen
           router.push('/score');

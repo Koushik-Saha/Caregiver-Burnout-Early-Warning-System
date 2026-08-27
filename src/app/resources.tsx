@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StyleSheet, Text, View, Pressable, StatusBar, ScrollView, Linking, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, Stack } from 'expo-router';
@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING, FONT_SIZES } from '@/constants/theme';
 import { AUSTIN_RESOURCES, ResourceItem } from '@/constants/resources';
 import { useCareStore } from '@/lib/store';
+import { trackEvent } from '@/lib/analytics';
 
 export default function ResourcesScreen() {
   const router = useRouter();
@@ -13,6 +14,11 @@ export default function ResourcesScreen() {
   // Read latest computed score from store to adapt screen context
   const weeklyScore = useCareStore((state) => state.weeklyScore);
   const userScore = weeklyScore !== null ? weeklyScore : 67; // Default to 67 (Elevated) if not set
+
+  useEffect(() => {
+    // Log resources opened locally
+    trackEvent('resources_opened');
+  }, []);
 
   const handleBack = () => {
     router.back();

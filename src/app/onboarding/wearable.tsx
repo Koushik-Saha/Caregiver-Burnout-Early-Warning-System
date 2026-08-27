@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING, FONT_SIZES } from '@/constants/theme';
+import { trackEvent } from '@/lib/analytics';
 
 const OPTIONS = [
   { id: 'connect', label: 'Connect my watch or phone', subtitle: 'Imports sleep and daily steps automatically', emoji: '⌚' },
@@ -18,9 +19,12 @@ export default function WearableScreen() {
     setSelectedOption(optionId);
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!selectedOption) return;
     
+    // Log onboarding completed locally
+    await trackEvent('onboarding_completed', { connectedWearable: selectedOption === 'connect' });
+
     if (selectedOption === 'connect') {
       Alert.alert(
         'Connection Simulated',

@@ -16,6 +16,7 @@ import { COLORS, SPACING, FONT_SIZES } from '@/constants/theme';
 import { useCareStore } from '@/lib/store';
 import { computeCareLoad, CareLoadResult } from '@/lib/score';
 import { getCheckinHistory } from '@/lib/checkin';
+import { trackEvent } from '@/lib/analytics';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -138,6 +139,7 @@ export default function ScoreScreen() {
         const granted = await requestPermission();
         if (granted) {
           await scheduleWeeklyReminder();
+          await trackEvent('reminder_set', { reminderDay: 'Tuesday', reminderTime: '8pm' });
           Alert.alert('Success', 'Reminder set for every Tuesday at 8pm');
         } else {
           Alert.alert(
