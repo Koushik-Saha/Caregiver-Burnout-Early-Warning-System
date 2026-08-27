@@ -1,16 +1,30 @@
 {
   "expo": {
-    "name": "careload",
+    "name": "CareLoad",
     "slug": "careload",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "careload",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "dark",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "com.freedomshipping.careload",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSHealthShareUsageDescription": "CareLoad reads your sleep and activity data to help track your care load over time.",
+        "NSHealthUpdateUsageDescription": "CareLoad may write wellness check-in results to Apple Health.",
+        "NSUserNotificationsUsageDescription": "CareLoad sends you a weekly reminder to complete your check-in."
+      }
     },
     "android": {
+      "package": "com.freedomshipping.careload",
+      "versionCode": 1,
+      "permissions": [
+        "android.permission.ACTIVITY_RECOGNITION",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.VIBRATE"
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0D1117"
@@ -22,6 +36,7 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      "expo-notifications",
       "expo-router",
       [
         "expo-splash-screen",
@@ -32,6 +47,9 @@
         }
       ]
     ],
+    "extra": {
+      "eas": {}
+    },
     "experiments": {
       "typedRoutes": true
     }
