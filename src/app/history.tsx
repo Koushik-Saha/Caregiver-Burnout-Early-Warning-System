@@ -201,16 +201,16 @@ export default function HistoryScreen() {
               Come back after your first two check-ins to see your trend
             </Text>
 
-            {!showSample && (
-              <Pressable
-                onPress={() => setShowSample(true)}
-                style={styles.demoButton}
-                accessibilityRole="button"
-                accessibilityLabel="Show sample chart and check-in trend for preview"
-              >
-                <Text style={styles.demoButtonText}>View sample chart</Text>
-              </Pressable>
-            )}
+            <Pressable
+              onPress={() => setShowSample(!showSample)}
+              style={styles.demoButton}
+              accessibilityRole="button"
+              accessibilityLabel={showSample ? "Hide sample chart preview" : "Show sample chart and check-in trend for preview"}
+            >
+              <Text style={styles.demoButtonText}>
+                {showSample ? "Hide chart" : "View sample chart"}
+              </Text>
+            </Pressable>
           </View>
         </ScrollView>
       ) : (

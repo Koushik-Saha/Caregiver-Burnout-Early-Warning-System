@@ -95,14 +95,8 @@ export default function ResourcesScreen() {
                 {/* Description */}
                 <Text style={styles.cardDescription}>{resource.description}</Text>
 
-                {/* Labeled Info Rows inside card */}
+                {/* Labeled Info Rows inside card (excluding phone number) */}
                 <View style={styles.infoSection}>
-                  {resource.contact && (
-                    <View style={styles.infoRow}>
-                      <Text style={styles.infoLabel}>Phone</Text>
-                      <Text style={styles.infoValue}>{resource.contact}</Text>
-                    </View>
-                  )}
                   {resource.url && (
                     <View style={styles.infoRow}>
                       <Text style={styles.infoLabel}>Website</Text>
@@ -116,6 +110,11 @@ export default function ResourcesScreen() {
                     <Text style={styles.infoValue}>{resource.cost}</Text>
                   </View>
                 </View>
+
+                {/* Labeled phone row: white text, size 15, below description and above the Call button */}
+                {resource.contact && (
+                  <Text style={styles.phoneText}>📞 {resource.contact}</Text>
+                )}
 
                 {/* Action Button */}
                 <Pressable
@@ -264,6 +263,12 @@ const styles = StyleSheet.create({
     color: COLORS.textPri,
     fontWeight: '600',
   },
+  phoneText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    marginBottom: SPACING.md,
+    fontWeight: '500',
+  },
   actionButton: {
     height: 48, // Satisfies touch target requirements
     borderRadius: 8,
@@ -272,22 +277,22 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   actionButtonPhone: {
-    backgroundColor: COLORS.teal, // Matching fill color
+    backgroundColor: '#2DD4BF', // Fully filled teal button
   },
   actionButtonUrl: {
-    backgroundColor: COLORS.teal,
+    backgroundColor: '#2DD4BF', // Fully filled teal button
   },
   actionButtonPressed: {
     opacity: 0.85,
   },
   actionButtonText: {
     fontSize: FONT_SIZES.md, // 15px
-    fontWeight: 'bold',
+    fontWeight: '700', // Bold/700 weight
   },
   actionButtonTextPhone: {
-    color: COLORS.bg, // Matching fill text color
+    color: '#0D1117', // Dark contrast text color
   },
   actionButtonTextUrl: {
-    color: COLORS.bg,
+    color: '#0D1117', // Dark contrast text color
   },
 });
