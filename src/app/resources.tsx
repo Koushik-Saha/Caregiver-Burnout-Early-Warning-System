@@ -1,19 +1,18 @@
 import React from 'react';
 import { StyleSheet, Text, View, Pressable, StatusBar, ScrollView, Linking, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING, FONT_SIZES } from '@/constants/theme';
-import { useCareStore } from '@/lib/store';
 import { AUSTIN_RESOURCES, ResourceItem } from '@/constants/resources';
+import { useCareStore } from '@/lib/store';
 
 export default function ResourcesScreen() {
   const router = useRouter();
+  
+  // Read latest computed score from store to adapt screen context
   const weeklyScore = useCareStore((state) => state.weeklyScore);
-
-  // If score is not set yet, default to the mock checkin score (60)
-  const score = weeklyScore !== null ? weeklyScore : 60;
-  const isHighRisk = score >= 65;
+  const userScore = weeklyScore !== null ? weeklyScore : 67; // Default to 67 (Elevated) if not set
 
   const handleBack = () => {
     router.back();
@@ -21,7 +20,7 @@ export default function ResourcesScreen() {
 
   const handleAction = async (resource: ResourceItem) => {
     if (resource.type === 'phone' && resource.contact) {
-      const telUrl = `tel:${resource.contact.replace(/[^0-9+]/g, '')}`;
+      const telUrl = `tel:${resource.contact.replace(/[^0-9]/g, '')}`;
       const canOpen = await Linking.canOpenURL(telUrl);
       if (canOpen) {
         Linking.openURL(telUrl);
@@ -38,8 +37,15 @@ export default function ResourcesScreen() {
     }
   };
 
+  // Determine banner attributes based on computed score
+  const isHighRisk = userScore >= 65;
+  const bannerMessage = isHighRisk 
+    ? "Your score suggests you could use some support. These are real options, nearby."
+    : "Here are some options if you ever need a break.";
+
   return (
     <SafeAreaView style={styles.container}>
+      <Stack.Screen options={{ headerShown: false }} />
       <StatusBar barStyle="light-content" backgroundColor={COLORS.bg} />
 
       {/* Header Row */}
@@ -58,25 +64,16 @@ export default function ResourcesScreen() {
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
-        {/* Adaptive Score Banner */}
-        <View 
-          style={[
-            styles.banner, 
-            isHighRisk ? styles.bannerHighRisk : styles.bannerLowRisk
-          ]}
-          accessibilityRole="text"
-        >
-          <Ionicons 
-            name={isHighRisk ? "warning" : "information-circle"} 
-            size={24} 
-            color={isHighRisk ? COLORS.coral : COLORS.teal} 
-            style={styles.bannerIcon}
-          />
+        {/* Dynamic Context Header Banner */}
+        <View style={[
+          styles.banner, 
+          isHighRisk ? styles.bannerHighRisk : styles.bannerLowRisk
+        ]}>
+          <Text style={styles.bannerIcon} accessibilityElementsHidden={true} importantForAccessibility="no">
+            {isHighRisk ? "⚠️" : "🧭"}
+          </Text>
           <Text style={styles.bannerText}>
-            {isHighRisk 
-              ? "Your score suggests you could use some support. These are real options, nearby."
-              : "Here are some options if you ever need a break."
-            }
+            {bannerMessage}
           </Text>
         </View>
 
@@ -98,16 +95,26 @@ export default function ResourcesScreen() {
                 {/* Description */}
                 <Text style={styles.cardDescription}>{resource.description}</Text>
 
-                {/* Info Badges */}
-                <View style={styles.badgeRow}>
-                  <View style={styles.badge}>
-                    <Text style={styles.badgeText}>Cost: {resource.cost}</Text>
-                  </View>
+                {/* Labeled Info Rows inside card */}
+                <View style={styles.infoSection}>
                   {resource.contact && (
-                    <View style={[styles.badge, styles.contactBadge]}>
-                      <Text style={styles.badgeText}>{resource.contact}</Text>
+                    <View style={styles.infoRow}>
+                      <Text style={styles.infoLabel}>Phone</Text>
+                      <Text style={styles.infoValue}>{resource.contact}</Text>
                     </View>
                   )}
+                  {resource.url && (
+                    <View style={styles.infoRow}>
+                      <Text style={styles.infoLabel}>Website</Text>
+                      <Text style={styles.infoValue} numberOfLines={1}>
+                        {resource.url.replace('https://', '')}
+                      </Text>
+                    </View>
+                  )}
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Cost</Text>
+                    <Text style={styles.infoValue}>{resource.cost}</Text>
+                  </View>
                 </View>
 
                 {/* Action Button */}
@@ -193,6 +200,7 @@ const styles = StyleSheet.create({
   },
   bannerIcon: {
     marginRight: SPACING.md,
+    fontSize: FONT_SIZES.xl,
   },
   bannerText: {
     flex: 1,
@@ -234,27 +242,27 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginBottom: SPACING.md,
   },
-  badgeRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: SPACING.md,
-    gap: SPACING.sm,
-  },
-  badge: {
+  infoSection: {
     backgroundColor: COLORS.card,
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    borderRadius: 8,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
+    gap: 8,
   },
-  contactBadge: {
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  badgeText: {
-    fontSize: FONT_SIZES.md, // 15px - satisfies minimum font size rule
-    color: COLORS.textPri,
+  infoLabel: {
+    fontSize: FONT_SIZES.md, // 15px
+    color: COLORS.textSec,
     fontWeight: '500',
+  },
+  infoValue: {
+    fontSize: FONT_SIZES.md, // 15px
+    color: COLORS.textPri,
+    fontWeight: '600',
   },
   actionButton: {
     height: 48, // Satisfies touch target requirements
@@ -264,9 +272,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   actionButtonPhone: {
-    backgroundColor: COLORS.card,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    backgroundColor: COLORS.teal, // Matching fill color
   },
   actionButtonUrl: {
     backgroundColor: COLORS.teal,
@@ -279,7 +285,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   actionButtonTextPhone: {
-    color: COLORS.teal,
+    color: COLORS.bg, // Matching fill text color
   },
   actionButtonTextUrl: {
     color: COLORS.bg,
