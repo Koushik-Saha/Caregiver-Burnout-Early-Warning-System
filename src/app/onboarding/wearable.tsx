@@ -12,7 +12,7 @@ const OPTIONS = [
 
 export default function WearableScreen() {
   const router = useRouter();
-  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [selectedOption, setSelectedOption] = useState<string | null>('skip');
 
   const handleSelect = (optionId: string) => {
     setSelectedOption(optionId);
@@ -112,10 +112,8 @@ export default function WearableScreen() {
             );
           })}
         </View>
-      </View>
 
-      {/* Bottom Footer Area */}
-      <View style={styles.footer}>
+        {/* Continue Button placed right below cards */}
         <Pressable
           onPress={handleContinue}
           disabled={!selectedOption}
@@ -143,7 +141,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.bg,
     paddingHorizontal: SPACING.lg,
-    justifyContent: 'space-between',
   },
   header: {
     marginTop: SPACING.md,
@@ -258,6 +255,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: 32, // Sit exactly below the cards
   },
   buttonDisabled: {
     backgroundColor: COLORS.card,
