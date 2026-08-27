@@ -180,7 +180,7 @@ export default function WelcomeScreen() {
         </View>
 
         {/* Bottom Section: Call to Action pinned to bottom - Fade in */}
-        <Animated.View style={{ opacity: buttonFade, marginTop: 'auto' }}>
+        <Animated.View style={{ opacity: buttonFade, marginTop: 32 }}>
           <View style={styles.footerContainer}>
             <Pressable
               style={({ pressed }) => [
