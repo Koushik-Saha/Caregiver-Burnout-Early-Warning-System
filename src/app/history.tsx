@@ -191,7 +191,7 @@ export default function HistoryScreen() {
           {showSample && (
             <View style={styles.chartSection}>
               <Text style={styles.sectionTitle}>Sample Trend</Text>
-              {renderChart([42, 48, 51, 55, 59, 64, 61, 60], ['Wk1','Wk2','Wk3','Wk4','Wk5','Wk6','Wk7','Wk8'], '#2DD4BF')}
+              {renderChart([42, 48, 51, 55, 59, 64, 61, 49], ['Wk1','Wk2','Wk3','Wk4','Wk5','Wk6','Wk7','Wk8'], '#2DD4BF')}
             </View>
           )}
 
