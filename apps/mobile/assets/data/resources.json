@@ -1,0 +1,34 @@
+[
+  {
+    "id": "988",
+    "name": "988 Suicide & Crisis Lifeline",
+    "description": "Free, confidential 24/7 support for anyone experiencing mental health distress or crisis.",
+    "phone": "988",
+    "website": "https://988lifeline.org",
+    "category": "Crisis & Mental Health"
+  },
+  {
+    "id": "eldercare",
+    "name": "Eldercare Locator",
+    "description": "Nationwide service connecting older adults and caregivers to trustworthy local resources.",
+    "phone": "1-800-677-1116",
+    "website": "https://eldercare.acl.gov",
+    "category": "Senior Support"
+  },
+  {
+    "id": "capcog",
+    "name": "CAPCOG Area Agency on Aging (AAA)",
+    "description": "Local aging services, respite care assistance, caregiver education, and senior nutrition programs.",
+    "phone": "1-888-622-9111",
+    "website": "https://www.capcog.org/divisions/area-agency-on-aging",
+    "category": "Local AAA Services"
+  },
+  {
+    "id": "texas211",
+    "name": "Texas 2-1-1 Health & Human Services",
+    "description": "Free, anonymous service helping Texans find local community support, food, housing, and healthcare.",
+    "phone": "211",
+    "website": "https://www.211texas.org",
+    "category": "Community Assistance"
+  }
+]

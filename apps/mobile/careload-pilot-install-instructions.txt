@@ -1,0 +1,12 @@
+HOW TO INSTALL CARELOAD ON YOUR ANDROID PHONE
+
+1. Open this email on your Android phone (not a computer)
+2. Tap the careload-pilot.apk file attached to this email
+3. If your phone asks "Allow installs from this source" — tap Allow
+4. Tap Install
+5. Tap Open when installation finishes
+
+If you see a warning about "unknown sources":
+  Settings → Security → Install unknown apps → allow your email app
+
+Questions? Reply to this email.

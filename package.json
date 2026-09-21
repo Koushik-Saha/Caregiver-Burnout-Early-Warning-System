@@ -1,0 +1,22 @@
+{
+  "name": "caregiver-burnout-system",
+  "private": true,
+  "packageManager": "pnpm@12.5.1",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "typecheck": "turbo typecheck",
+    "lint": "turbo lint",
+    "test": "turbo test",
+    "db:generate": "pnpm --filter @careload/db db:generate",
+    "db:migrate": "pnpm --filter @careload/db db:migrate",
+    "db:studio": "pnpm --filter @careload/db db:studio",
+    "cron:dispatch": "node scripts/cron-dispatch.js"
+  },
+  "devDependencies": {
+    "eslint": "^9.20.0",
+    "prettier": "^3.5.0",
+    "turbo": "^2.4.0",
+    "typescript": "^5.7.0"
+  }
+}
